@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>元宵节快乐</title>
+    <link href="/the%20lantern%20festival/"/>
+    <url>/the%20lantern%20festival/</url>
+    
+    <content type="html"><![CDATA[<p>元宵节快乐</p><p><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/yxj.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>生活记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>生活记</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>用GitHub Actions 自动部署 Hexo博客</title>
+    <link href="/githubactions/"/>
+    <url>/githubactions/</url>
+    
+    <content type="html"><![CDATA[<p>之后就可以直接在私人仓库source/_posts/里面添加.md文件啦，可以随时随地写文章发文章</p><span id="more"></span><h2 id="参考借鉴来源："><a href="#参考借鉴来源：" class="headerlink" title="参考借鉴来源："></a>参考借鉴来源：</h2><p>GitHub Actions 来自动部署 Hexo：<a href="https://zhuanlan.zhihu.com/p/170563000">https://zhuanlan.zhihu.com/p/170563000</a><br>github将整个文件夹推送到自己的仓库：<a href="https://blog.csdn.net/viafcccy/article/details/85527118">https://blog.csdn.net/viafcccy/article/details/85527118</a></p><h1 id="一、配置github-actions部分"><a href="#一、配置github-actions部分" class="headerlink" title="一、配置github actions部分"></a>一、配置github actions部分</h1><h2 id="HEXO正常运作"><a href="#HEXO正常运作" class="headerlink" title="HEXO正常运作"></a>HEXO正常运作</h2><p>前提 </p><ul><li><p>node.js 环境 和 git 都已正确安装 （其实能正常运行 hexo 就已经说明正确安装了）</p></li><li><p>hexo 可以正常运行 可以正常部署（这里介绍部署到 github pages ）</p></li><li><p>配置好hexo的主题，博客名称等等</p><p>  ok，有了以上前提，可以继续了</p></li></ul><h2 id="改-config-yml-配置"><a href="#改-config-yml-配置" class="headerlink" title="改 _config.yml 配置"></a>改 _config.yml 配置</h2><p>_config.yml 文件中在前提情况下，已经配置好了:</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">deploy:</span><br><span class="hljs-symbol">  type:</span> git<br><span class="hljs-symbol">  repo:</span> https:<span class="hljs-comment">//github.com/用户名/仓库名.git</span><br><span class="hljs-symbol">  branch:</span> master<br></code></pre></td></tr></table></figure><p>此时我们需要将上面 repo 的配置改成 ssh 格式——即 <code>git@github.com:用户名/仓库名.git</code><br>避免在执行 actions 时 部署出错</p><h2 id="再次生成密钥"><a href="#再次生成密钥" class="headerlink" title="再次生成密钥"></a>再次生成密钥</h2><p>随便在任何文件位置可以直接右键 git bash here<br>复制粘贴这个 <code>ssh-keygen -t rsa -b 4096 -C &quot;Hexo Deploy Key&quot; -f github-deploy-key -N &quot;&quot;</code></p><p>会在当前目录生成两个文件</p><ul><li>github-deploy-key —— 私钥</li><li>github-deploy-key.pub —— 公钥</li></ul><h4 id="私钥直接存放在-hexo-原始文件（hexo源文件）的仓库代码里"><a href="#私钥直接存放在-hexo-原始文件（hexo源文件）的仓库代码里" class="headerlink" title="私钥直接存放在 hexo 原始文件（hexo源文件）的仓库代码里"></a>私钥直接存放在 hexo 原始文件（hexo源文件）的仓库代码里</h4><ul><li>自行新建一个私人仓库来存放hexo源文件</li><li>然后访问私人代码仓库 <code>Settings -&gt; Secrets</code>,<code>New secret</code></li><li>Name 填写 <code>EXO_DEPLOY_KEY</code> 注意大小写，这个后面的 GitHub Actions Workflow 要用到，一定不能写错。</li><li>在 Value 填入 github-deploy-key(私钥)  中的内容</li></ul><h4 id="公钥放到-GitHub-Pages-对应的代码仓库里面"><a href="#公钥放到-GitHub-Pages-对应的代码仓库里面" class="headerlink" title="公钥放到 GitHub Pages 对应的代码仓库里面"></a>公钥放到 GitHub Pages 对应的代码仓库里面</h4><ul><li>访问 github pages 对应的代码仓库 <code>Settings -&gt; Deploy keys</code>,<code>Add deploy key</code></li><li>Title：HEXO_DEPLOY_PUB 可自定义名字</li><li>在 Key 填入 github-deploy-key.pub（公钥）中的内容</li><li>Allow write access 一定要勾上</li></ul><h2 id="创建-workflow"><a href="#创建-workflow" class="headerlink" title="创建 workflow"></a>创建 workflow</h2><p>在私人代码仓库里点 Actions<br>然后创建一个新文件 <code>.github/workflows/deploy.yml</code><br>deploy 名字可以自取但是一定要放在<code>.github/workflows</code>目录中</p><ul><li>deploy.yml 内容如下：<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">name:</span> <span class="hljs-string">Hexo</span> <span class="hljs-string">Deploy</span><br><br><span class="hljs-attr">on:</span><br>  <span class="hljs-attr">push:</span><br>    <span class="hljs-attr">branches:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">master</span><br><br><span class="hljs-attr">jobs:</span><br>  <span class="hljs-attr">build:</span><br>    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-18.04</span><br>    <span class="hljs-attr">if:</span> <span class="hljs-string">github.event.repository.owner.id</span> <span class="hljs-string">==</span> <span class="hljs-string">github.event.sender.id</span><br><br>    <span class="hljs-attr">steps:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Checkout</span> <span class="hljs-string">source</span><br>        <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span><br>        <span class="hljs-attr">with:</span><br>          <span class="hljs-attr">ref:</span> <span class="hljs-string">master</span><br><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Setup</span> <span class="hljs-string">Node.js</span><br>        <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/setup-node@v1</span><br>        <span class="hljs-attr">with:</span><br>          <span class="hljs-attr">node-version:</span> <span class="hljs-string">&#x27;12&#x27;</span><br><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Setup</span> <span class="hljs-string">Hexo</span><br>        <span class="hljs-attr">env:</span><br>          <span class="hljs-attr">ACTION_DEPLOY_KEY:</span> <span class="hljs-string">$&#123;&#123;</span> <span class="hljs-string">secrets.HEXO_DEPLOY_KEY</span> <span class="hljs-string">&#125;&#125;</span><br>        <span class="hljs-attr">run:</span> <span class="hljs-string">|</span><br>          <span class="hljs-string">mkdir</span> <span class="hljs-string">-p</span> <span class="hljs-string">~/.ssh/</span><br>          <span class="hljs-string">echo</span> <span class="hljs-string">&quot;$ACTION_DEPLOY_KEY&quot;</span> <span class="hljs-string">&gt;</span> <span class="hljs-string">~/.ssh/id_rsa</span><br>          <span class="hljs-string">chmod</span> <span class="hljs-number">700</span> <span class="hljs-string">~/.ssh</span><br>          <span class="hljs-string">chmod</span> <span class="hljs-number">600</span> <span class="hljs-string">~/.ssh/id_rsa</span><br>          <span class="hljs-string">ssh-keyscan</span> <span class="hljs-string">github.com</span> <span class="hljs-string">&gt;&gt;</span> <span class="hljs-string">~/.ssh/known_hosts</span><br>          <span class="hljs-string">git</span> <span class="hljs-string">config</span> <span class="hljs-string">--global</span> <span class="hljs-string">user.email</span> <span class="hljs-string">&quot;改成你的邮箱&quot;</span><br>          <span class="hljs-string">git</span> <span class="hljs-string">config</span> <span class="hljs-string">--global</span> <span class="hljs-string">user.name</span> <span class="hljs-string">&quot;改成你的用户名&quot;</span><br>          <span class="hljs-string">npm</span> <span class="hljs-string">install</span> <span class="hljs-string">hexo-cli</span> <span class="hljs-string">-g</span><br>          <span class="hljs-string">npm</span> <span class="hljs-string">install</span><br><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Deploy</span><br>        <span class="hljs-attr">run:</span> <span class="hljs-string">|</span><br>          <span class="hljs-string">hexo</span> <span class="hljs-string">clean</span><br>          <span class="hljs-string">hexo</span> <span class="hljs-string">deploy</span><br></code></pre></td></tr></table></figure></li></ul><p>ok，这样就完美搞定 github action 和 GitHub pages 的连接啦，并且可以自动触发 Workflow 执行动作</p><h1 id="二、推送部署-hexo-博客源文件到私人仓库"><a href="#二、推送部署-hexo-博客源文件到私人仓库" class="headerlink" title="二、推送部署 hexo 博客源文件到私人仓库"></a>二、推送部署 hexo 博客源文件到私人仓库</h1><blockquote><p>俺是一个纯小白，只能傻瓜式的推送部署到仓库了</p></blockquote><ul><li><p>在任意位置 git bash here 然后 输入 <code>git clone https://github.com/用户名/仓库名.git</code> 将私人仓库给克隆下来</p></li><li><p>将所有的hexo文件都复制到刚刚克隆下来的文件夹里面</p></li><li><p>然后  <code>git init</code> 将该克隆下的文件夹变成Git可以管理的仓库</p></li><li><p><code>git add .</code> 通过git add将所有文件提交到暂存区</p></li><li><p><code>git commit -m &#39;the initial edition&#39;</code> 版本描述</p></li><li><p><code>git remote add origin https://github.com/用户名/仓库名.git</code>与仓库关联</p></li><li><p><code>git pull</code> 第一次推送需要</p></li><li><p><code>git push -u origin master</code> 带有-u这个参数是指，将master分支的所有内容都提交,第一次关联之后后边你再提交就可以不用这个参数了</p></li><li><p><code>git push origin master</code> 之后你的每一次修改，你就可以只将你修改用这个push就好了</p><p>  此时，所有的hexo文件全都git到仓库了，之后就可以直接在私人仓库source/_posts/里面添加.md文件啦，可以随时随地写文章发文章，不受设备和配置环境干扰啦。<br>俺是一个纯小白，都是一步一步按照别人的步骤踩坑摸索来的，不容易呜呜呜。</p></li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>笔记</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>笔记</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>写一篇.md文章需要的markdown语法</title>
+    <link href="/wz/"/>
+    <url>/wz/</url>
+    
+    <content type="html"><![CDATA[<p>需要在文章消息头部写什么呢，大概需要以下内容</p><span id="more"></span><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-string">自用模板</span><br><br><span class="hljs-meta">---</span><br><span class="hljs-attr">title:</span> <br><span class="hljs-attr">date:</span> <br><span class="hljs-attr">author:</span> <br><span class="hljs-attr">sticky:</span> <br><span class="hljs-attr">hide:</span> <span class="hljs-literal">false</span><br><span class="hljs-attr">categories:</span> <br><span class="hljs-attr">tags:</span> <br><span class="hljs-attr">password:</span> <br><span class="hljs-attr">abstract:</span> <span class="hljs-string">此文章已加密了,</span> <span class="hljs-string">需要输入密码查看.</span><br><span class="hljs-attr">message:</span> <span class="hljs-string">您好,</span> <span class="hljs-string">这里需要密码.</span><br><span class="hljs-attr">wrong_pass_message:</span> <span class="hljs-string">抱歉,</span> <span class="hljs-string">这个密码看着不太对,</span> <span class="hljs-string">请再试试.</span><br><span class="hljs-attr">wrong_hash_message:</span> <span class="hljs-string">抱歉,</span> <span class="hljs-string">这个文章不能被校验,</span> <span class="hljs-string">不过您还是能看看解密后的内容.</span><br><span class="hljs-attr">banner_img:</span> <br><span class="hljs-attr">index_img:</span> <br><span class="hljs-meta">---</span><br><br></code></pre></td></tr></table></figure><p>写md文章时，手动输入，需要在文章消息头部写什么呢，大概需要以下内容</p><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><br><br><span class="hljs-meta">---</span><br><span class="hljs-attr">title:</span> <br><span class="hljs-string">这是文章标题</span><br><br><span class="hljs-attr">date:</span> <br><span class="hljs-string">文章日期</span> <span class="hljs-string">如</span> <span class="hljs-number">2021-02-25 </span><span class="hljs-number">10</span><span class="hljs-string">:31</span><br><br><span class="hljs-attr">author:</span> <br><span class="hljs-string">填写作者名字</span><br><br><span class="hljs-attr">sticky:</span> <br><span class="hljs-string">主题的排序，直接填数字，可以用来做顶置</span><br><br><span class="hljs-attr">hide:</span> <br><span class="hljs-string">是否隐藏文章</span> <span class="hljs-string">是true</span> <span class="hljs-string">否false或空着</span><br><br><span class="hljs-attr">categories:</span> <br><span class="hljs-string">分类</span> <span class="hljs-string">输入分类名称即可</span><br><br><span class="hljs-attr">tags:</span><br><span class="hljs-string">标签</span> <span class="hljs-string">输入标签名称即可</span><br><br><span class="hljs-attr">tags:</span><br><span class="hljs-bullet">-</span> <span class="hljs-string">加密文章</span><br><span class="hljs-attr">password:</span> <br><span class="hljs-attr">abstract:</span> <span class="hljs-string">此文章已加密了,</span> <span class="hljs-string">需要输入密码查看.</span><br><span class="hljs-attr">message:</span> <span class="hljs-string">您好,</span> <span class="hljs-string">这里需要密码.</span><br><span class="hljs-attr">wrong_pass_message:</span> <span class="hljs-string">抱歉,</span> <span class="hljs-string">这个密码看着不太对,</span> <span class="hljs-string">请再试试.</span><br><span class="hljs-attr">wrong_hash_message:</span> <span class="hljs-string">抱歉,</span> <span class="hljs-string">这个文章不能被校验,</span> <span class="hljs-string">不过您还是能看看解密后的内容.</span><br><span class="hljs-string">这个如果文章需要加密时，可设置</span><br><br><span class="hljs-attr">banner_img:</span> <br><span class="hljs-string">这个是顶上的大图</span><br><br><span class="hljs-attr">index_img:</span> <br><span class="hljs-string">这个是封面图</span><br><br><span class="hljs-meta">---</span><br><br><br></code></pre></td></tr></table></figure><p>有些属性还是得根据主题，来修改，上面这些是根据我自己的主题来的</p><p>加密文章需要安装插件 <sup id="fnref:1" class="footnote-ref"><a href="#fn:1" rel="footnote"><span class="hint--top hint--rounded" aria-label="https://github.com/D0n9X1n/hexo-blog-encrypt">[1]</span></a></sup><br>头部信息(Front-matter)配置参考<sup id="fnref:2" class="footnote-ref"><a href="#fn:2" rel="footnote"><span class="hint--top hint--rounded" aria-label="https://hexo.io/zh-cn/docs/front-matter">[2]</span></a></sup></p><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a href="https://github.com/D0n9X1n/hexo-blog-encrypt">https://github.com/D0n9X1n/hexo-blog-encrypt</a><a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:2" class="footnote-text"><span><a href="https://hexo.io/zh-cn/docs/front-matter">https://hexo.io/zh-cn/docs/front-matter</a><a href="#fnref:2" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>笔记</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>我又回来啦</title>
+    <link href="/one/"/>
+    <url>/one/</url>
+    
+    <content type="html"><![CDATA[<p>我又回来啦，好久没来折腾博客了</p><span id="more"></span>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>我回来啦</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>2020年校团委招新广东松山职业技术学院</title>
+    <link href="/tuanwei/"/>
+    <url>/tuanwei/</url>
+    
+    <content type="html"><![CDATA[<p>记录大学生活【视频】</p><span id="more"></span><div style="position: relative; padding: 30% 45%;"><iframe style="position: absolute; width: 100%; height: 100%; left: 0; top: 0;" src="//player.bilibili.com/player.html?aid=629208779&bvid=BV1wb4y1R7JE&cid=298040692&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe></div>]]></content>
+    
+    
+    <categories>
+      
+      <category>大学生活</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>记录</tag>
+      
+      <tag>大学生活</tag>
+      
+      <tag>视频</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>有能力爱自己，有余力爱别人</title>
+    <link href="/ssp/"/>
+    <url>/ssp/</url>
+    
+    <content type="html"><![CDATA[<p>有能力爱自己，有余力爱别人  </p><p><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251152999.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251159927.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251166742.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251170945.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251174772.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251186661.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251182580.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251179450.jpg"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/mmexport1614251189959.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>大学生活</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>记录</tag>
+      
+      <tag>大学生活</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>快秃头了呀呀呀呀呀呀 | 作息时间表</title>
+    <link href="/tutou/"/>
+    <url>/tutou/</url>
+    
+    <content type="html"><![CDATA[<p>话说，大家快秃头了没👻哈哈哈哈哈，挺多松山师兄师姐都有秃头的困扰，大部分原因基本是熬夜造成，前阵子有个师兄😁投稿说建议给大家分享一下这个作息表，希望大家能有个规律健康的生活</p><span id="more"></span><p>世界卫生组织：一份全球公认最健康的作息时间表！</p><h2 id="⏰07-00"><a href="#⏰07-00" class="headerlink" title="⏰07:00"></a>⏰07:00</h2><p>起床最佳时刻，醒来一杯温开水，帮助每一个缺水的细胞都重新活力四射</p><h2 id="⏰07-20-08-00"><a href="#⏰07-20-08-00" class="headerlink" title="⏰07:20-08:00"></a>⏰07:20-08:00</h2><p>吃早饭，一顿营养全面而丰富的早餐，让你一整天活力十足</p><h2 id="⏰08-30-09-00"><a href="#⏰08-30-09-00" class="headerlink" title="⏰08:30-09:00"></a>⏰08:30-09:00</h2><p>避免剧烈运动，早上人体免疫系统最弱，不要做剧烈运动</p><h2 id="⏰09-00-10-00"><a href="#⏰09-00-10-00" class="headerlink" title="⏰09:00-10:00"></a>⏰09:00-10:00</h2><p>做困难工作，这个时间段，人脑最清晰，应该用来做最有难度的事</p><h2 id="⏰10-30"><a href="#⏰10-30" class="headerlink" title="⏰10:30"></a>⏰10:30</h2><p>让眼睛休息一下，起来走动走动，眺望一下远方，让精神得以放松</p><h2 id="⏰11-00"><a href="#⏰11-00" class="headerlink" title="⏰11:00"></a>⏰11:00</h2><p>吃点水果，水果的营养可以充分的被身体采纳</p><h2 id="⏰12-00-12-30"><a href="#⏰12-00-12-30" class="headerlink" title="⏰12:00-12:30"></a>⏰12:00-12:30</h2><p>丰富的午餐为你的身体增添能量，保证你身体的能量所需</p><h2 id="⏰13-00-14-00"><a href="#⏰13-00-14-00" class="headerlink" title="⏰13:00-14:00"></a>⏰13:00-14:00</h2><p>午休会让你精力充沛，更重要的是会更健康。逛淘宝、聊天并不能帮你缓解困意，反而会在停止后更加困倦，最好的休息方式当然还是小睡一会儿</p><h2 id="⏰14-00-16-00"><a href="#⏰14-00-16-00" class="headerlink" title="⏰14:00-16:00"></a>⏰14:00-16:00</h2><p>做创意性工作，午后是人类思维最活跃的时间，想想工作中的改善措施，并付诸实践</p><h2 id="⏰16-00"><a href="#⏰16-00" class="headerlink" title="⏰16:00"></a>⏰16:00</h2><p>喝杯酸奶，补充一下身体流失的能量</p><h2 id="⏰16-00-18-00"><a href="#⏰16-00-18-00" class="headerlink" title="⏰16:00-18:00"></a>⏰16:00-18:00</h2><p>做细致性工作，身体和大脑都处于一天的巅峰状态，这时候我们应该做细致而密集的工作</p><h2 id="⏰18-00-19-00"><a href="#⏰18-00-19-00" class="headerlink" title="⏰18:00-19:00"></a>⏰18:00-19:00</h2><p>晚餐要多吃一些比较清淡易消化的膳食，尽量不要吃一些刺激性或油腻的食物，这样久而久之对肠胃是不太好的</p><h2 id="⏰19-30"><a href="#⏰19-30" class="headerlink" title="⏰19:30"></a>⏰19:30</h2><p>晚餐后稍作休息，可以开始健身了，你可以选择相对温和的快步走，也可以慢跑或游泳，根据个人需求进行体育锻炼</p><h2 id="⏰20-30"><a href="#⏰20-30" class="headerlink" title="⏰20:30"></a>⏰20:30</h2><p>看书或者电视，放松身心或充电学习</p><h2 id="⏰22-00"><a href="#⏰22-00" class="headerlink" title="⏰22:00"></a>⏰22:00</h2><p>洗个热水澡，让身体彻底舒缓下来，精神会随之放松</p><h2 id="⏰22-30"><a href="#⏰22-30" class="headerlink" title="⏰22:30"></a>⏰22:30</h2><p>人体的各项器官都开始处于休息期了，不要违背身体的自然规律，放松睡一个好觉，明天又是美好的一天</p><p><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210221211554.jpg"></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>松山</tag>
+      
+      <tag>大学生活</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>2020级新生问题解答 | 广东松山职业技术学院</title>
+    <link href="/jieda2020/"/>
+    <url>/jieda2020/</url>
+    
+    <content type="html"><![CDATA[<p>这又是一篇惊天地泣鬼神的“唯美”文章啦，作者是下足了功夫，花了一整个下午完成了下面一篇非常实用的文章，目的就是为了解答2020级新生的n多问题，希望各位新生在群里问问题之前先看完这篇文章再问<br><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210222231542.webp"><br>这是我第二次写这种解答文档，首先照例欢迎一下你们来到大山（此处欢迎语省去几百字）写个前言先</p><p>前一个文档其实我感觉还是帮了不少19级的新生了解这个学校，了解这个学校的特色之处与不足的地方，去年其实写的不够严谨，导致有些新生的理解存在误区之类的情况</p><p>当然今年也不可能改善，因为我都快两年没好好写过作文了，水平早就大不如前了，所以下面我要写的东西仅代表我个人观点，但我个人还是很希望你们认真把这个文档看完，有什么不懂的可以再来问</p><p>（1）首先是宿舍问题<br>学校分别有18栋宿舍，分别为1到13栋、松华楼、松实楼、松园、楠园、桂园</p><p>宿舍可容纳人数为：<br>1到6栋：普通8人宿舍<br>7到8栋：由于是自习室改造空间较大，可容纳16人的宿舍（网吧宿舍系列），当然还有4人与8人的宿舍，这些就是相当于高中的办公室改造成的宿舍<br>9栋：少数比较特殊的6人宿舍，空间较小<br>10栋：独栋别墅类宿舍，这里就不吹了，确实环境差，8人住<br>11到13栋：全松山性价比最高的8人宿舍<br>松华松实：全松山性价比排行第三的8人宿舍<br>松园：看似很小松园里面宿舍很多，女生专属8人宿舍<br>楠园：全松山性价比排行第二的男生宿舍，6人宿舍，许多人都梦寐以求的宿舍其实也就那样<br>桂园：女生宿舍里最好的6人宿舍，19级因为某些特殊原因住进去了一批男生，抛去一些其他原因可以说是最好的女生宿舍</p><p>上面是宿舍简介。下面我就来详细说一下这些宿舍的优缺点</p><p>1到6栋充满乡土气息，1栋独立于学校以外，在商业街，点外卖有绝对优势，去计算机楼与固字楼上课也有相对的距离优势，不用怕迟到。缺点就是环境相对较差（1-4栋）</p><p>5到6栋宿舍是独立区域，靠近第二饭堂（楠园饭堂），楠园校门出门就是各大烧烤摊与宵夜档口，旁边是大操场与旧篮球场，还有一个场地较小的羽毛球场，缺点就是半夜时分有点吵，因为都在恰宵夜劈酒劈可乐难免会有噪音</p><p>1到6栋没有阳台，衣服就晾在走廊外面属实有点麻烦，而且风大的时候可能不知道会被吹去哪。1到6栋都围绕着楠园，因此去第二饭堂非常方便，吃饭喝奶茶都相对方便</p><p>7到8栋是教学楼改造，因此宿舍原来都是教室，空间非常大，可以容纳16人居住，有戏称“网吧宿舍”的绰号，但是实际上我个人绝对如果不是那么潮湿的话还是相对舒适的，喜欢人多热闹的可以放心去。7栋门口就是羽毛球场，不过场地小风大打球的体验并不好，旁边是排球场跟网球场，从排球场穿过去可以去图书馆，图书馆再往下就是新篮球场与医务室</p><p>因此7到8栋去学校的任何地方不能说远也不能说近，因为靠近学校中心所以去哪的距离都是相对平均的</p><p>9栋是6人宿舍，什么都好就是空间小。学校中心宿舍，旁边就是和字楼，出门就是新篮球场跟羽毛球场，对门就是图书馆，去宽字楼上课有绝对的距离优势，去学校的别的教学楼上课的距离相对舒适，不会很远也不会很近，性价比不高也不低，只有一个缺点就是空间太太太太小了，别的还好</p><p>10栋，历年来计算机系学生专属宿舍，山清水秀空气清新，独立于其他宿舍以外，坐落在厚字楼下面，松山里永不断水的宿舍，如果不嫌弃简直就是别墅级别的宿舍。出校门与去厚字楼固字楼上课有绝对的距离优势，去商业街与计算机楼的距离中等舒适，去各大篮球场与操场的距离不友好，门禁有时候等于没有</p><p>11到13栋是校内性价比最高的宿舍，虽然是8人间但是是分成两个相对独立的小四人间，空间较大所以非常舒适，特别适合在里面开party，有独卫有阳台但是桌子跟床是分开的，阳台很小，晾衣服最好还是拿出外面去晾，风一大了衣服就不知道去哪了…去过几次11到12栋莫名感觉信号有点不好，也许是靠近山的缘故，也是因为靠近山的缘故其实夏天也不会很热，因为夏天会有从山上下来的自然风吹过来，所以还是很舒适的，对11到13栋不友好的一点就是去其他教学楼的距离相对较远，除此之外没有特别明显的缺点。哦对了，11栋楼下的门是坏的，而且历史悠久，所以住在这边相当于没有门禁</p><p>松华松实是连一起的，两边互通，因为地势原因松实比松华高了大概半层左右，这点上中间楼梯就能感受的到。配置是11到13栋的阉割版，有阳台无独卫上下床带柜子的桌子，因为地势高的缘故太阳可以直接照到宿舍，因此冬天晒太阳特别舒服，然而夏天就…我觉得后山吹过来的风也拯救不了我们。下楼就能去第一饭堂，吃饭特别方便，点外卖的话由于离学校商业街特别远可能送外卖到的时间会稍微比其他宿舍长，所以下楼吃饭是一个好选择</p><p>松园女生专属宿舍，低楼层有点潮湿，高楼层还好，潮湿的主要原因是因为脱水机放在走廊外面，松园没有阳台只能晾衣服在走廊里，因此潮湿的问题会一直存在。宿舍环境挺舒服的，出门就是第一饭堂，中午上完课去饭堂吃饱了走两步就回宿舍了。松园有ABC三栋，宿舍数量比较多，因此女生是可以不用担心没有宿舍住的，没有独卫没有阳台，有上下床跟一张带柜子的桌子，床下面还有柜子</p><p>桂园以前是女生宿舍，后来因为某些原因桂C一至四楼分配给了各系的19级男生。桂园低楼层的湿冷冬天时特别明显…桂A到桂B的楼梯口无论第几层都经常是湿漉漉的，所以下楼梯要格外小心。桂园的配置比楠园要好，有独卫有独立阳台跟上床下桌，活动空间比松园大，因此是最好的女生宿舍6人间</p><p>楠园到每个男生都希望去的宿舍，上床下桌有独卫，硬要说缺点就是太高了，分配宿舍如果在高楼层还不在顶楼就非常尴尬，还好外卖基本上能很快送上去。还有一个点就是阳台是跟隔壁宿舍共用的，没带钥匙回来可以从隔壁宿舍穿过阳台回宿舍，这一点就比不上桂园</p><p>普及一下那些宿舍是有空调的<br>桂园7楼<br>楠园8楼<br>松园5楼<br>松华松实7楼<br>11栋5楼<br>12栋6楼<br>13栋4到5楼<br>有没有空调就看你开学前的抽奖手气好不好了<br>空调的费用有点高，考虑下宿友跟自己的经济能力再选择开不开</p><p>宿舍的床位不是学校分配，而是先到先得原则，最重要的其实不是宿舍的好坏，应该是宿友的素质，宿友不行再好的宿舍也白搭</p><p>（2）接下来是网络问题<br>学校里面信号并不是那么好，网速最快的是联通卡，信号最稳定的是电信卡，移动一般般，也不能说差。宿舍里有wifi但是需要你自己购买校园宽带，不知道怎么操作的话关注“松山校园宽带”或者到开学后在松园桂园有摆摊咨询报装宽带的时候去询问。资费是120到170/一学期（付的钱越多网速越快你们应该懂）</p><p>这个宽带的网速？总之不快，玩游戏还好，下载东西有点慢，没加速包那一档下载峰值不超过1.5m/s，有加速包那一档的下载峰值是3.3m/s，你细品</p><p>（3）接下来是早读问题<br>早读是必上的，考勤制度每个系都不一样，时长和开始时间每个系都不同，具体怎么定是看辅导员心情的，反正我计算机系早读天天摸鱼</p><p>没有晚读这个说法，顶多也就是晚上有课，具体看教务处跟基础部排课表的时候怎么安排</p><p>课室非固定，基本上完一节课就得往下个课室跑</p><p>有些专业课程较少的话，可能一天就一节课，上完就能嗨皮或者回宿舍睡觉了</p><p>周五没课怎么办？找上舍友去玩就行，没课可以一直嗨皮（嗨皮一时爽，一直嗨皮一直爽），只要你在下星期第一节课上课前到学校就行</p><p>（4）接下来是热水问题<br>热水是每天都有的，供应时间是17:30到22:30，冬天想冲热水澡就早点洗澡，晚上有活动建议洗了澡再去参加，不然过了10:30只能回来洗冷水澡了。热水要充水卡，而且每天只能用7毛钱的水费，多的就没有了</p><p>自来水是免费的，你怎么用都行</p><p>（5）学校的门禁时间是<br>周日到周四22:30，周五到周六23:30。早上6:00会解除门禁。<br>如果不在意助学金奖学金的问题的话，门禁随便刷。如果要出去吃宵夜的话过了10:30就得叫人帮你开门了，因为门禁只刷进门不刷出门，你是出不去的，只能从外面刷卡</p><p>（6）宿舍不查寝<br>辅导员查不查宿舍看他的工作安排或者心情。大学跟高中不一样，辅导员可不是班主任。虽然定期有学生会、宿管会、保卫处的人来查宿舍，但是一般是查违禁物品，违禁物品是什么你们的开学教育课辅导员是会跟你们说的，这里就不细述了</p><p>（7）男女比例7:3<br>没有别的原因，女生一般不会选理工类院校，所以你会发现学校里经管系外语系的女孩子特别多，再详细一点的原因就不说了</p><p>（8）录取通知书的问题<br>我直接把去年的新生问题简答搬过来</p><p>你们学考3+以及自主招生的录取通知书应是5月份寄出（参考去年签发录取通知书的日期：5月8日）</p><p>学考、3+与自主招生都是先发录取通知书，8月份录取高考生后再收入学指南与学校发的银行卡跟手机卡</p><p>学考、3+与自主招生都要收三份快递，第一份是录取通知书，第二份是入学指南，第三份是随后寄出的银行卡与手机卡</p><p>银行卡是用于学校缴费用的，如无意外这张银行卡会一直陪伴你到大学毕业。所以银行卡很重要，一定要妥善保管</p><p>手机卡是移动卡，使用是自愿原则，可激活使用，会送免费话费送上一段时间，50G流量（学校自从全校覆盖wifi后移动的信号也变好了，所以放心使用），有全校互拨短号免费的功能，你们可以用完话费就停用这张卡，没有影响的</p><p>录取通知书寄出是按照你们普高报名所填的家庭地址发出，联系电话也是你报名用的手机号，所以你们收快递前建议不要换手机号码，以免快递员联系不到产生快递退回学校的情况，录取通知书从某种意义上看是非常重要的，但不是入学时的必要凭证，如果确实是录取通知书丢了的话可以报道当天持本人的身份证前去报道，不会受到太大的影响</p><p>请注意，新生户口是不用迁入院校所在地的，也不用拿着录取通知书到户口本地派出所盖章。直接凭录取通知书跟身份证到学校报到。团员会在报到时有团委的师兄师姐帮你们转入组织关系。你们报到应按照学校要求报到的时间来，如故不能前来的，可拨打学院招生办电话请假，电话为0751-6502668。请假时间不能超过两周超过两周视为自动放弃入学资格，学院会按照规定注销你们的学籍</p><p>男生一定要带上兵役证，兵役证也是报道要用到的，但是上交时间另定</p><p>总结：报道所需物品如下<br>入学通知书、考生纸质档案（一般为档案袋，很重要，拿到了不要拆开封条）党团组织关系、兵役证（男生必带）、身份证</p><p>各系报道地点：<br>（一）机械工程系所属专业报道地点：宽字楼一楼大厅；<br>（二）电气工程系所属专业报道地点：和字楼三楼会议室；<br>（三）计算机系所属专业报道地点：计算机楼一楼大厅；<br>（四）外语系所属专业报道地点：厚字楼一楼大厅；<br>（五）经济管理系所属专业报道地点：宽字楼一楼大厅。</p><p>完成报道后，恭喜你正式成为一位松山学子。你将会在报到处领取宿舍钥匙、学生临时卡（临时卡一定要妥善保管，在没发学生正式卡以前临时卡就是你的出入凭证、饭卡、水卡等）、新生入学手册、可能会有的韶关市医疗保险申请单</p><p>转专业的问题<br>直接附网址：<a href="http://zsxx.gdsspt.cn:82/contents/5/461.html">http://zsxx.gdsspt.cn:82/contents/5/461.html</a></p><p>军训问题<br>参考时间是10月底至11月初，参考时长：<br>18级军训10天，19级军训14天<br>具体的军训安排请等待军区安排，学校的军训一直由火箭军96736部队负责，今年可能会有改变，所以看学校安排<br>军训对头发没有要求，戴上帽子就行<br>强调一个事情：不用剪头发不用剪头发不用剪头发</p><p>专业没有好坏之分<br>硬要说哪些专业比较好的话，学校前身是韶钢职工大学，因此机械系与电气系专业肯定会比其他系的专业好上一点<br>（其实学的好的都是好专业，学不好的啥专业都是坏的，看个人修行）</p><p>在学校你可以吃饭堂，饭堂用校园卡消费，不收现金。学校有两个饭堂，松园第一饭堂跟楠园饭堂。松园饭堂有两层，据经常吃饭堂的师兄师姐们介绍二层的伙食比一层更好一点<br>（综合各师兄师姐的意见，有必要说一下:饭堂里的饭有时候有点硬，接受不了的可以到商业街去吃饭）</p><p>商业街:能吃饭的地方算是比较多的，有条件的你甚至可以一个星期不重样得吃完一家换下一家。商业街里的饭店餐厅都很好，而且还有外卖上门服务</p><p>外卖的话，学校三家比较出名的平台（微步、饿了么、美团）都可以下单，想吃饭的看准时间，送外卖大概时间在40分钟内送到（虽然很想吐槽这个点，但是考虑下我们学校由学生兼职的外卖小哥哥小姐姐还是不说这个点了）</p><p>总而言之，外卖是很方便的，早上有课的话可以10:50左右下单，回宿舍就能看到外卖在门口前放着了</p><p>（9）关于断水断电的问题<br>著名的南华施工队（抱歉，我就是可以为所欲为.jpg）这个学期来说还没有多次大规模的停水断电问题，感觉这个现象应该开始减少了，不需要过于担心</p><p>学校断电怎么办？师兄都是约人去市区浪的，看你们选择哈哈哈，这个时候就要开动你们的脑筋自寻娱乐方式了</p><p>上个学期有发生过断电现象，为了不影响教学活动，学校是专门请了发电车过来学校维持教学活动的正常运行的，所以学校在这方面做得其实是非常好的</p><p>断水请储水，这个不用说都知道</p><p>宿舍跳闸或者没电费怎么办？跳闸不用担心，一般是你们用的电器功率较大才跳闸，建议不要两个电吹风一起同时使用</p><p>没电费了就去楼下圈存机充电费呗，免费电用完就是这样的，人均8度免费电，没电费了起码充100块钱电费才够用</p><p>反正一般来说，如果没有发生什么大问题（来自学校或者市里基建问题又或者是个人问题的话），学校应该是永不断水断电的</p><p>（10）请假的问题<br>请假还是看辅导员，没有别的好途径</p><p>（11）有关于学校绿色通道与助学贷款（生源地贷款）的问题<br>家庭经济困难无力承担学费的师弟师妹，可以申请生源地贷款，首先要先到国家开发银行生源地贷款的官网进行申请，填写完资料后，到你户口所在地的教育局去申请生源地贷款。请注意，必须要由你本人与父母一方陪同前去。一般来说，申请生源地贷款的流程并不是很复杂，最多一两个小时就能搞定，申请成功后教育局是会给你一份一式三份的合同，还有回执（回执到时要上交学校），领取到这些重要文件后要注意妥善保存</p><p>助学贷款本质上跟生源地贷款没有区别的，但是是学校为你办理的贷款，因此如果你没有申请生源地贷款但后来又想申请助学贷款的话，就要提前备好相关证明材料，如村委、镇政府提供的困难证明、户口本等等相关资料向学校提交申请</p><p>入学报到时，辅导员会询问你是否走绿色通道，你申请了生源地贷款的，自然是要走绿色通道的。绿色通道是指因家庭暂时无力承担学费申请缓交或者有申请助学贷款与生源地贷款的走的入学通道。还有其他的问题请看下一个问答</p><p>（11）学校的奖助学金问题<br>8月份会有一份广东省高等院校学生贫困认定表随录取通知书发出，这是你们申请助学金必须要填的一份表，要申请助学金、助学贷款都要先通过贫困认定了才能申请</p><p>去年的政策有所改变，贫困认定申请将采取绝对信任原则，也就是说，你们不需要到村委、镇政府等单位去开具相关贫困证明，只需填写好那张贫困认定表即可申请贫困认定</p><p>申请贫困认定，到时你自己专业班里是会任命一个助贷委员帮你们搞定的，你们尽量配合好助贷委员的工作就行。贫困认定表上交后，会经过学校审批，教育部审批，通过后会有文件公示，通过贫困认定的学生会根据贫困等级获得相应额度的助学金（一般困难2000、困难3000、特殊困难4000）</p><p>一般来说，助学金会分上下学期分期发放（对半发放，一个学期发放所得额度的50%）</p><p>还有精准扶贫、建档立卡等等政策，我相信师弟师妹们如果是高中有享受到这个政策的，就不需要我去科普了，因为这个我也不是很熟悉，有兴趣可以看完这些后自行上网查找国家政策</p><p>奖学金的问题。因为师兄本人也没有奖学金，不知道从何谈起，因此有兴趣的话可以自己找一下以前有获得奖学金的师兄师姐了解一下（综合测评专业前五的话就很有机会）</p><p>（12）快递的问题<br>比较著名点的快递营业点基本上都在校内，科普一下快递服务点的位置先：</p><p>申通、邮政EMS位于学校门口右侧，同一家店面</p><p>圆通、京东在维乐水果店的隔壁，门口有圆通妈妈驿站的标识</p><p>顺丰、百世、汇通、天天这四个快递营业点统一在娱乐圈隔壁</p><p>中通、韵达快递在高校联盟隔壁。计算机楼出门就能看到了</p><p>学校所有的快递网点均没有二次收费行为，且支持寄件</p><p>学校的快递地址为校名：广东松山职业技术学院</p><p>在这里我就不说最好不要发申通这种话了，毕竟人家开快递服务点我们还是要支持一下的，不然人家怎么赚钱呢？</p><p>写的差不多了，就这样吧。来学校生活的怎样取决于你们自己的选择，写这玩意单纯无聊才写的，你们看完也不用感谢我什么的，毕竟我</p><p>真的不会装机  电脑配置装机什么的就不要来问我了</p><p>来自18-我真的不会装机</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>松山</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>松山</title>
+    <link href="/lvtu/"/>
+    <url>/lvtu/</url>
+    
+    <content type="html"><![CDATA[<p>一份精致的松山绿图【图片】</p><span id="more"></span><p><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105158.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105209.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105227.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105234.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105245.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105255.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105306.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105312.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105320.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105326.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105334.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210223105341.webp"><img src="https://cdn.jsdelivr.net/gh/anxinweb/tuchuang@master/anxinimg/20210221211554.jpg"></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>松山</tag>
+      
+      <tag>图片</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
