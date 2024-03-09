@@ -1,5 +1,5 @@
-# AHXIN
-大家好，我是ah新呀~
+#阿信
+大家好，大啊****
 
 欢迎访问我的个人网站
 [https://ahxin.cn/](https://ahxin.cn/)
@@ -9,4 +9,4 @@
 [https://www.yuque.com/ahxin](https://www.yuque.com/ahxin)
 
 公众号
-![我在你说tell](/wzns.jpg)
+！[jpg]（/wzns.jpg）
